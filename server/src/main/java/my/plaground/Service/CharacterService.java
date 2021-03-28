@@ -127,14 +127,16 @@ public class CharacterService {
 
 
 
-    public void connect(Character character) {
+    public boolean connect(Character character) {
         character.setConnected(true);
         this.updateCharacter(character);
+        return character.isConnected();
     }
 
-    public void disconnect(Character character) {
+    public boolean disconnect(Character character) {
         character.setConnected(false);
         this.updateCharacter(character);
+        return character.isConnected();
     }
 
     public Boolean respawn(Integer characterId) {

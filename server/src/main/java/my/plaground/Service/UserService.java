@@ -36,25 +36,9 @@ public class UserService {
         if(character == null)
             return false;
 
-        this.characterService.connect(character);
-        return true;
+        return this.characterService.connect(character);
     }
 
-
-    public Optional<Character> getCharacterByUsernameAndClassId(UserEntity user, CharacterClass characterClass){
-        List<Character> characters = this.characterService.getCharactersByUser(user);
-
-        List<Character> selectedClassChars = characters.stream().filter(character1 -> character1.getCharacterClass() == characterClass).collect(Collectors.toList());
-        if(selectedClassChars.size() > 1)
-            log.warn("Multiple characters found for user: " + user.getUsername() + " class: " + characterClass.toString());
-
-        return selectedClassChars.stream().findFirst();
-    }
-
-
-    private Character createCharacterByUsernameAndClass(UserEntity user, CharacterClass characterClass) {
-        return this.characterService.createCharacter(user, characterClass);
-    }
 
     public boolean logout(String username) {
         UserEntity user = this.repository.findByUsername(username);
@@ -67,6 +51,22 @@ public class UserService {
             return false;
 
         characters.forEach(this.characterService::disconnect);
-        return true;
+
+        return characters.stream().noneMatch(Character::isConnected);
+    }
+
+
+    private Optional<Character> getCharacterByUsernameAndClassId(UserEntity user, CharacterClass characterClass){
+        List<Character> characters = this.characterService.getCharactersByUser(user);
+
+        List<Character> selectedClassChars = characters.stream().filter(character1 -> character1.getCharacterClass() == characterClass).collect(Collectors.toList());
+        if(selectedClassChars.size() > 1)
+            log.warn("Multiple characters found for user: " + user.getUsername() + " class: " + characterClass.toString());
+
+        return selectedClassChars.stream().findFirst();
+    }
+
+    private Character createCharacterByUsernameAndClass(UserEntity user, CharacterClass characterClass) {
+        return this.characterService.createCharacter(user, characterClass);
     }
 }
