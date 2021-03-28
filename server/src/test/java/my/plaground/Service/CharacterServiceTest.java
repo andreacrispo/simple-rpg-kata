@@ -8,6 +8,7 @@ import my.plaground.Exception.ResourceNotFound;
 import my.plaground.Repository.CharacterRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.mockito.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ public class CharacterServiceTest {
     @Spy
     private CharacterFactory factory;
     private UserEntity u1;
+    private UserEntity u2;
     private UserEntity u999;
     private CharacterEntity c1;
     private CharacterEntity c2;
@@ -42,7 +44,8 @@ public class CharacterServiceTest {
 
     @BeforeEach
     public void setup(){
-        u1 = UserEntity.builder().id(1).build();
+        u1 = UserEntity.builder().id(1).username("Pippo").build();
+        u2 = UserEntity.builder().id(2).username("Franco").build();
         u999 = UserEntity.builder().id(999).build();
         c1 = CharacterEntity.builder().id(1).hp(0).isConnected(false).levelValue(1).classId(CharacterClass.Paladin).user(u1).build();
         c2 = CharacterEntity.builder().id(2).hp(100).isConnected(true).levelValue(1).classId(CharacterClass.Wizard).user(u1).build();
@@ -175,5 +178,62 @@ public class CharacterServiceTest {
 
         assertNotNull(characters);
         assertTrue(characters.isEmpty());
+    }
+
+
+
+    @Test public void
+    ensure_existing_user_returns_his_characters(){
+        List<Character> characters = this.service.getCharactersByUser(this.u1);
+
+        assertNotNull(characters);
+        assertEquals(characters.get(0).getId(), this.c1.getId());
+        assertEquals(characters.get(1).getId(), this.c2.getId());
+        assertEquals(characters.get(2).getId(), this.c3.getId());
+
+        assertTrue(characters.stream().allMatch(c -> c.getUsername().equals(this.u1.getUsername())));
+    }
+
+    @Test public void
+    ensure_not_existing_user_cannot_create_a_character() {
+
+        assertThrows(
+                ResourceNotFound.class,
+                () -> {
+                    Character createdCharacter = this.service.createCharacter(new UserEntity(), CharacterClass.Paladin);
+                });
+    }
+
+    @Test public void
+    ensure_character_is_created_based_on_class_by_user() {
+        Character createdCharacter = this.service.createCharacter(this.u2, CharacterClass.Paladin);
+
+        assertNotNull(createdCharacter);
+        assertEquals(createdCharacter.getUsername(), this.u2.getUsername());
+        assertEquals(createdCharacter.getCharacterClass(), CharacterClass.Paladin);
+    }
+
+    @Test public void
+    ensure_set_connected_of_disconnected_updated_correctly() {
+        Character existingCharacter = this.service.getCharacters().get(0);
+        existingCharacter.setConnected(false);
+        this.service.connect(existingCharacter);
+
+        assertTrue(existingCharacter.isConnected());
+    }
+
+
+    @Test public void
+    ensure_set_disconnected_of_connected_updated_correctly() {
+        Character existingCharacter = this.service.getCharacters().get(0);
+        existingCharacter.setConnected(true);
+        this.service.disconnect(existingCharacter);
+
+        assertFalse(existingCharacter.isConnected());
+    }
+
+    @Disabled
+    @Test public void
+    ensure_only_dead_character_can_respawn() {
     }
 }

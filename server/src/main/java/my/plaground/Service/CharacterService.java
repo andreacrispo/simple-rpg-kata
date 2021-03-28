@@ -107,6 +107,9 @@ public class CharacterService {
 
 
     public Character createCharacter(UserEntity user, CharacterClass characterClass) {
+        if(user == null || user.getUsername() == null)
+            throw new ResourceNotFound();
+
         Character newChar = this.characterFactory.getCharacterByClass(characterClass);
 
         CharacterEntity entity = new CharacterEntity();
