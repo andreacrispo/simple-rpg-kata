@@ -3,6 +3,8 @@ package my.plaground.Service;
 import my.plaground.Domain.*;
 import my.plaground.Domain.Character;
 import my.plaground.Domain.Entity.CharacterEntity;
+import my.plaground.Domain.Entity.UserEntity;
+import my.plaground.Exception.ResourceNotFound;
 import my.plaground.Repository.CharacterRepository;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,6 +15,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.util.Assert;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,15 +34,27 @@ public class CharacterServiceTest {
 
     @Spy
     private CharacterFactory factory;
+    private UserEntity u1;
+    private UserEntity u999;
+    private CharacterEntity c1;
+    private CharacterEntity c2;
+    private CharacterEntity c3;
 
     @BeforeEach
     public void setup(){
-        CharacterEntity c1 = CharacterEntity.builder().id(1).hp(0).isConnected(false).levelValue(1).classId(CharacterClass.Paladin).build();
-        CharacterEntity c2 = CharacterEntity.builder().id(2).hp(100).isConnected(true).levelValue(1).classId(CharacterClass.Wizard).build();
-        CharacterEntity c3 = CharacterEntity.builder().id(3).hp(150).isConnected(true).levelValue(1).classId(CharacterClass.Rogue).build();
-        when(repository.findAll()).thenReturn(List.of(c1,c2,c3));
+        u1 = UserEntity.builder().id(1).build();
+        u999 = UserEntity.builder().id(999).build();
+        c1 = CharacterEntity.builder().id(1).hp(0).isConnected(false).levelValue(1).classId(CharacterClass.Paladin).user(u1).build();
+        c2 = CharacterEntity.builder().id(2).hp(100).isConnected(true).levelValue(1).classId(CharacterClass.Wizard).user(u1).build();
+        c3 = CharacterEntity.builder().id(3).hp(150).isConnected(true).levelValue(1).classId(CharacterClass.Rogue).user(u1).build();
+        when(repository.findAll()).thenReturn(List.of(c1, c2, c3));
+        when(repository.findById(1)).thenReturn(Optional.of(c1));
+        when(repository.findById(2)).thenReturn(Optional.of(c2));
         when(repository.findById(3)).thenReturn(Optional.of(c3));
+        when(repository.findById(998)).thenReturn(Optional.empty());
         when(repository.findById(999)).thenReturn(Optional.empty());
+        when(repository.findByUser(u1)).thenReturn(List.of(c1, c2, c3));
+        when(repository.findByUser(u999)).thenReturn(Collections.emptyList());
         when(repository.save(Mockito.any(CharacterEntity.class))).then(AdditionalAnswers.returnsFirstArg());
     }
 
@@ -95,11 +110,70 @@ public class CharacterServiceTest {
     }
 
     @Test public void
-    ensure_update_position_of_existing_character_returns_character_data(){
+    ensure_update_position_of_existing_character_returns_character_updated_data(){
         Character character = this.service.updatePosition(3, Position.at(99,55), MoveDirection.Down);
 
         assertEquals(99, character.getPosition().getX());
         assertEquals(55, character.getPosition().getY());
         assertEquals(MoveDirection.Down, character.getMoveDirection());
+    }
+
+    @Test public void
+    ensure_update_not_existing_character_returns_null(){
+        Character notExistingCharacter = new Paladin();
+        notExistingCharacter.setId(999);
+
+        Character character = this.service.updateCharacter(notExistingCharacter);
+        assertNull(character);
+    }
+
+    @Test public void
+    ensure_update_existing_character_returns_updated_data(){
+        Character existingCharacter = this.service.getCharacters().get(0);
+        existingCharacter.setHp(existingCharacter.getHp() - 1);
+        existingCharacter.setLevel(existingCharacter.getLevel() + 1);
+        existingCharacter.setConnected(!existingCharacter.isConnected());
+
+        Character updatedCharacter = this.service.updateCharacter(existingCharacter);
+
+        assertNotNull(updatedCharacter);
+        assertEquals(existingCharacter.getHp(), updatedCharacter.getHp());
+        assertEquals(existingCharacter.getLevel(), updatedCharacter.getLevel());
+        assertEquals(existingCharacter.isConnected(), updatedCharacter.isConnected());
+    }
+
+    @Test public void
+    ensure_not_existing_attacker_and_not_existing_enemy_throws_exception(){
+        assertThrows(
+                ResourceNotFound.class,
+                () -> {
+                    this.service.attack(998, 999);
+                });
+    }
+
+    @Test public void
+    ensure_not_existing_attacker_throws_exception(){
+        assertThrows(
+                ResourceNotFound.class,
+                () -> {
+                    this.service.attack(999, 1);
+                });
+    }
+
+    @Test public void
+    ensure_not_existing_enemy_throws_exception(){
+        assertThrows(
+                ResourceNotFound.class,
+                () -> {
+                    this.service.attack(1, 999);
+                });
+    }
+
+    @Test public void
+    ensure_not_existing_user_returns_no_characters(){
+        List<Character> characters = this.service.getCharactersByUser(this.u999);
+
+        assertNotNull(characters);
+        assertTrue(characters.isEmpty());
     }
 }
