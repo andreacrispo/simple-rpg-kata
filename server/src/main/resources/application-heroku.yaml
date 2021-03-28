@@ -1,0 +1,23 @@
+---
+# Profile for heroku deployment
+spring:
+  profiles: heroku
+
+  datasource:
+    driverClassName: org.postgresql.Driver
+    maxActive: 10
+    maxIdle: 5
+    minIdle: 2
+    initialSize: 5
+    removeAbandoned: true
+    url: ${DATABASE_URL}
+
+  jpa:
+    hibernate:
+      ddl-auto:  update
+    properties:
+      hibernate:
+        jdbc:
+          lob:
+            non_contextual_creation: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
