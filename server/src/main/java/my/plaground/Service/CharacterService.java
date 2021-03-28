@@ -140,6 +140,9 @@ public class CharacterService {
     public Boolean respawn(Integer characterId) {
         return this.getCharacter(characterId)
                         .map(c ->{
+                                    if(c.getHp() > 0)
+                                        return false;
+
                                     c.setHp(c.getInitHp());
                                     c.setPosition(Position.at(50, 100));
                                     updateCharacter(c);

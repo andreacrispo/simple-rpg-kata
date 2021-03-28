@@ -35,6 +35,7 @@ public class CharacterServiceTest {
 
     @Spy
     private CharacterFactory factory;
+
     private UserEntity u1;
     private UserEntity u2;
     private UserEntity u999;
@@ -232,8 +233,19 @@ public class CharacterServiceTest {
         assertFalse(existingCharacter.isConnected());
     }
 
-    @Disabled
     @Test public void
-    ensure_only_dead_character_can_respawn() {
+    ensure_alive_character_cannot_respawn() {
+        assertFalse(this.service.respawn(2));
+    }
+
+    @Test public void
+    ensure_dead_character_is_respawned() {
+        assertTrue(this.service.respawn(1));
+        assertTrue(this.c1.getHp() > 0);
+    }
+
+    @Test public void
+    ensure_not_existing_character_is_not_respawned(){
+        assertFalse(this.service.respawn(998));
     }
 }
