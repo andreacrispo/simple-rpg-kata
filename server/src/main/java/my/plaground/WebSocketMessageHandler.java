@@ -73,7 +73,7 @@ public class WebSocketMessageHandler extends TextWebSocketHandler {
                   }
               }
         };
-        new Timer().scheduleAtFixedRate(timer, 0,100);
+        new Timer().scheduleAtFixedRate(timer, 0,600);
     }
 
     @Override
