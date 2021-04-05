@@ -21,13 +21,20 @@ public class CharacterEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(unique = true, nullable = false)
     private int id;
+
     private int levelValue;
+
     private boolean isConnected;
+
     private double positionx;
+
     private double positiony;
+
     @Enumerated(EnumType.ORDINAL)
     private MoveDirection moveDirection = MoveDirection.None;
+
     private double hp;
+
     @Column(name="classId")
     @Enumerated(EnumType.ORDINAL)
     private CharacterClass classId;
