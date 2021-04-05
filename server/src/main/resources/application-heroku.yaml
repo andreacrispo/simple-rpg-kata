@@ -10,7 +10,8 @@ spring:
     minIdle: 2
     initialSize: 5
     removeAbandoned: true
-    url: ${DATABASE_URL}
+    url: ${DATABASE_URL
+    initialization-mode: always
 
   jpa:
     hibernate:
